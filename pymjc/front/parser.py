@@ -24,7 +24,6 @@ class MJParser(Parser):
 
     debugfile = 'parser.out'
 
-
     ###################################
 	#Program and Class Declarations   #
     ###################################    
