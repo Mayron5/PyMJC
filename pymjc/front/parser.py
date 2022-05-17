@@ -29,19 +29,19 @@ class MJParser(Parser):
     ###################################    
     @_('MainClass ClassDeclarationStar')
     def Goal(self, p):
-        return p
+        return Program(p.MainClass, p.ClassDeclarationStar)
     
     @_('CLASS Identifier LEFTBRACE PUBLIC STATIC VOID MAIN LEFTPARENT STRING LEFTSQRBRACKET RIGHTSQRBRACKET Identifier RIGHTPARENT LEFTBRACE Statement RIGHTBRACE RIGHTBRACE')
     def MainClass(self, p):
-        return p
+        return MainClass(p.Identifier0, p.Identifier1, p.Statement)
 
     @_('Empty')
     def ClassDeclarationStar(self, p):
-        return p
+        return ClassDecl()
 
     @_('ClassDeclaration ClassDeclarationStar')
     def ClassDeclarationStar(self, p):
-        return p
+        return ClassDeclList()
 
     @_('CLASS Identifier SuperOpt LEFTBRACE VarDeclarationStar MethodDeclarationStar RIGHTBRACE')
     def ClassDeclaration(self, p):
