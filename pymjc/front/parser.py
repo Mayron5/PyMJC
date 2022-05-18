@@ -4,20 +4,21 @@ from sly import Parser
 
 from pymjc.log import MJLogger
 
+
 class MJParser(Parser):
 
     def __init__(self):
         self.syntax_error = False
         self.src_file_name = "UnknownSRCFile"
         super().__init__
-        
+
     precedence = (('nonassoc', LESS, AND),
-                  ('left', PLUS, MINUS),        
+                  ('left', PLUS, MINUS),
                   ('left', TIMES),
                   ('right', NOT),
                   ('left', DOT)
-                 )
-                 
+                  )
+
     tokens = MJLexer.tokens
 
     syntax_error = False
@@ -25,12 +26,13 @@ class MJParser(Parser):
     debugfile = 'parser.out'
 
     ###################################
-	#Program and Class Declarations   #
-    ###################################    
+    #Program and Class Declarations   #
+    ###################################
+
     @_('MainClass ClassDeclarationStar')
     def Goal(self, p):
         return Program(p.MainClass, p.ClassDeclarationStar)
-    
+
     @_('CLASS Identifier LEFTBRACE PUBLIC STATIC VOID MAIN LEFTPARENT STRING LEFTSQRBRACKET RIGHTSQRBRACKET Identifier RIGHTPARENT LEFTBRACE Statement RIGHTBRACE RIGHTBRACE')
     def MainClass(self, p):
         return MainClass(p.Identifier0, p.Identifier1, p.Statement)
@@ -41,22 +43,22 @@ class MJParser(Parser):
 
     @_('ClassDeclaration ClassDeclarationStar')
     def ClassDeclarationStar(self, p):
-        p.ClassDeclarationStar.add_element(p.ClassDeclarationStar)
+        p.ClassDeclarationStar.add_element(p.ClassDeclaration)
         return p.ClassDeclarationStar
 
     @_('CLASS Identifier SuperOpt LEFTBRACE VarDeclarationStar MethodDeclarationStar RIGHTBRACE')
     def ClassDeclaration(self, p):
-        if type(p.SuperOpt) != Identifier:
-            return ClassDeclSimple(p.Identifier, p.VarDeclarationStar, p.MethodDeclarationStar)
-
-        else: ClassDeclExtends(p.Identifier, p.SuperOpt, p.VarDeclarationStar, p.MethodDeclarationStar)
-
-
+        if(type(p.SuperOpt) != Identifier):
+            ClassDeclExtends(p.Identifier, p.SuperOpt,
+                             p.VarDeclarationStar, p.MethodDeclarationStar)
+        else:
+            ClassDeclSimple(p.Identifier, p.VarDeclarationStar,
+                            p.MethodDeclarationStar)
 
     @_('Empty')
     def SuperOpt(self, p):
         return p.Empty
-    
+
     @_('EXTENDS Identifier')
     def SuperOpt(self, p):
         return p.Identifier
@@ -72,7 +74,7 @@ class MJParser(Parser):
 
     @_('Type Identifier SEMICOLON')
     def VarDeclaration(self, p):
-        return VarDecl(p.Type, p.Identifier)
+        return p.Identifier
 
     @_('Empty')
     def MethodDeclarationStar(self, p):
@@ -90,9 +92,9 @@ class MJParser(Parser):
     @_('Empty')
     def FormalParamListOpt(self, p):
         return FormalList()
-        
+
     @_('FormalParamStar')
-    def FormalParamListOpt(self, p):            
+    def FormalParamListOpt(self, p):
         return p.FormalParamStar
 
     @_('FormalParam')
@@ -108,8 +110,8 @@ class MJParser(Parser):
 
     @_('Type Identifier')
     def FormalParam(self, p):
-        return Formal(p.Type, p.Identifier)
-        
+        return p
+
     ###################################
     #Type Declarations                #
     ###################################
@@ -128,7 +130,7 @@ class MJParser(Parser):
 
     @_('Identifier')
     def Type(self, p):
-        return IdentifierType(p.Identifier.name)
+        return IdentifierType(p.Identifier)
 
     ###################################
     #Statements Declarations          #
@@ -213,9 +215,9 @@ class MJParser(Parser):
 
     @_('Expression')
     def ExpressionListStar(self, p):
-        list = ExpList()
-        list.add_element(p.Expression)
-        return list
+        expressions = ExpList()
+        expressions.add_element(p.Expression)
+        return expressions
 
     @_('ExpressionListStar COMMA Expression')
     def ExpressionListStar(self, p):
@@ -248,9 +250,9 @@ class MJParser(Parser):
 
     @_('Literal')
     def Expression(self, p):
-        if p.Literal == True:
+        if(p.Literal == "true"):
             return TrueExp()
-        if p.Literal == False:
+        elif(p.Literal == "false"):
             return FalseExp()
         return p.Literal
 
@@ -265,33 +267,29 @@ class MJParser(Parser):
     def Empty(self, p):
         return p
 
-
     ##################################
     #Literals Declarations           #
     ##################################
+
     @_('BooleanLiteral')
     def Literal(self, p):
         return p.BooleanLiteral
 
     @_('IntLiteral')
     def Literal(self, p):
-        return p.IntLiteral
+        return IntegerType()
 
     @_('TRUE')
     def BooleanLiteral(self, p):
-        return 'True'
+        return "true"
 
     @_('FALSE')
     def BooleanLiteral(self, p):
-        return 'False'
+        return "false"
 
     @_('NUM')
     def IntLiteral(self, p):
         return IntegerLiteral(p.NUM)
-
-    @_('MINUS NUM')
-    def IntLiteral(self, p):
-        return IntegerLiteral(-1 * int(p.NUM))
 
     def error(self, p):
         MJLogger.parser_log(self.src_file_name, p.lineno, p.value[0])

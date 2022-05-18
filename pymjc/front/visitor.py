@@ -1,8 +1,11 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from ast import arguments
 import enum
 from msilib.schema import Class
-from tkinter import E
+from tkinter import E, SE
+from turtle import right
+from unicodedata import name
 
 from pymjc.front.ast import *
 from pymjc.front.symbol import *
@@ -627,18 +630,15 @@ class FillSymbolTableVisitor(Visitor):
         return self.symbol_table
 
     def visit_program(self, element: Program) -> None:
-
         element.main_class.accept(self)
         for index in range(element.class_decl_list.size()):
             element.class_decl_list.element_at(index).accept(self)
-            
 
     def visit_main_class(self, element: MainClass) -> None:
 
         class_entry = ClassEntry()
-
         newClassDeclaration = self.symbol_table.add_scope(element.class_name_identifier.name, class_entry)
-        
+
         if not(newClassDeclaration):
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
 
@@ -648,14 +648,15 @@ class FillSymbolTableVisitor(Visitor):
 
     def visit_class_decl_extends(self, element: ClassDeclExtends) -> None:
 
-        class_entry = ClassEntry(element.super_class_name.name)
+        if self.symbol_table.contains_key(element.class_name.name):
 
-        newClassDeclaration = self.symbol_table.add_scope(element.class_name.name, class_entry)
+            class_entry = ClassEntry(element.super_class_name.name)
+            if self.symbol_table.add_scope(element.class_name.name, class_entry):
 
-        if newClassDeclaration:
-            superClassIsDeclared = self.symbol_table.contains_key(element.super_class_name.name)
-            if (superClassIsDeclared):
                 self.symbol_table.add_extends_entry(element.class_name.name, element.super_class_name.name)
+
+                element.class_name.accept(self)
+                element.super_class_name.accept(self)
 
                 for index in range(element.var_decl_list.size()):
                     element.var_decl_list.element_at(index).accept(self)
@@ -664,31 +665,27 @@ class FillSymbolTableVisitor(Visitor):
                     element.method_decl_list.element_at(index).accept(self)
 
             else:
-                self.add_semantic_error(SemanticErrorType.UNDECLARED_SUPER_CLASS)
+                self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
         else:
-            self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
+            self.add_semantic_error(SemanticErrorType.UNDECLARED_SUPER_CLASS)
 
-       
-        element.class_name.accept(self)
-        element.super_class_name.accept(self)
-        
     def visit_class_decl_simple(self, element: ClassDeclSimple) -> None:
+        
         class_entry = ClassEntry()
 
         newClassDeclaration = self.symbol_table.add_scope(element.class_name.name, class_entry)
 
         if (newClassDeclaration):
-            
+            element.class_name.accept(self)
+
             for index in range(element.method_decl_list.size()):
                 element.method_decl_list.element_at(index).accept(self)
-            
+
             for index in range(element.var_decl_list.size()):
                 element.var_decl_list.element_at(index).accept(self)
 
         else:
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
-
-        element.class_name.accept(self)
 
     def visit_var_decl(self, element: VarDecl) -> None:
 
@@ -699,19 +696,18 @@ class FillSymbolTableVisitor(Visitor):
         else:
             newVarDeclaration = self.symbol_table.add_local(element.name.name, element.type)
 
-        if not(newVarDeclaration):
+        if newVarDeclaration:
+            element.name.accept(self)
+            element.type.accept(self)
+        else:
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_VAR)
-
-        element.name.accept(self)
-        element.type.accept(self)
 
     def visit_method_decl(self, element: MethodDecl) -> None:
 
-        method_entry = MethodEntry()
-
+        method_entry = MethodEntry(element.type)
         newMethodDeclaration = self.symbol_table.add_method(element.name.name, method_entry)
 
-        if(newMethodDeclaration):
+        if newMethodDeclaration:
 
             for index in range(element.formal_param_list.size()):
                 element.formal_param_list.element_at(index).accept(self)
@@ -728,12 +724,12 @@ class FillSymbolTableVisitor(Visitor):
 
         else:
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_METHOD)
- 
+
     def visit_formal(self, element: Formal) -> None:
 
         newFormal = self.symbol_table.add_param(element.name.name, element.type)
 
-        if(newFormal):
+        if newFormal:
             element.name.accept(self)
             element.type.accept(self)
         else:
@@ -752,7 +748,6 @@ class FillSymbolTableVisitor(Visitor):
         return None
 
     def visit_block(self, element: Block) -> None:
-
         for index in range(element.statement_list.size()):
             element.statement_list.element_at(index).accept(self)
 
@@ -763,27 +758,30 @@ class FillSymbolTableVisitor(Visitor):
         element.else_statement.accept(self)
 
     def visit_while(self, element: While) -> None:
-        
+
         element.condition_exp.accept(self)
         element.statement.accept(self)
 
     def visit_print(self, element: Print) -> None:
-        
+
         element.print_exp.accept(self)
 
     def visit_assign(self, element: Assign) -> None:
-        
-        element.right_side.accept(self)
-        element.left_side.accept(self)
+       
+        if self.symbol_table.contains_key(element.left_side.name):
+            element.right_side.accept(self)
+            element.left_side.accept(self)
+        else:
+            self.add_semantic_error(SemanticErrorType.UNDECLARED_IDENTIFIER)
 
     def visit_array_assign(self, element: ArrayAssign) -> None:
-        
-        element.array_exp.accept(self)
+
         element.array_name.accept(self)
+        element.array_exp.accept(self)
         element.right_side.accept(self)
 
     def visit_and(self, element: And) -> None:
-        
+
         element.left_side.accept(self)
         element.right_side.accept(self)
 
@@ -793,27 +791,27 @@ class FillSymbolTableVisitor(Visitor):
         element.right_side.accept(self)
 
     def visit_plus(self, element: Plus) -> None:
-        
+
         element.left_side.accept(self)
         element.right_side.accept(self)
 
     def visit_minus(self, element: Minus) -> None:
-        
+
         element.left_side.accept(self)
         element.right_side.accept(self)
 
     def visit_times(self, element: Times) -> None:
-        
+
         element.left_side.accept(self)
         element.right_side.accept(self)
 
     def visit_array_lookup(self, element: ArrayLookup) -> None:
 
-        element.in_side_exp.accept(self)
         element.out_side_exp.accept(self)
+        element.in_side_exp.accept(self)
 
     def visit_array_length(self, element: ArrayLength) -> None:
-        
+
         element.length_exp.accept(self)
 
     def visit_call(self, element: Call) -> None:
@@ -825,11 +823,11 @@ class FillSymbolTableVisitor(Visitor):
         element.callee_exp.accept(self)
 
     def visit_integer_literal(self, element: IntegerLiteral) -> None:
-        
-        return None
+    
+        element.accept(self)
 
     def visit_true_exp(self, element: TrueExp) -> None:
-        
+
         element.accept(self)
 
     def visit_false_exp(self, element: FalseExp) -> None:
@@ -837,27 +835,27 @@ class FillSymbolTableVisitor(Visitor):
         element.accept(self)
 
     def visit_identifier_exp(self, element: IdentifierExp) -> None:
-        
+
         element.accept(self)
 
     def visit_this(self, element: This) -> None:
-        
+
         element.accept(self)
 
     def visit_new_array(self, element: NewArray) -> None:
-        
+
         element.new_exp.accept(self)
 
     def visit_new_object(self, element: NewObject) -> None:
-        
+
         element.object_name.accept(self)
 
     def visit_not(self, element: Not) -> None:
-        
+
         element.negated_exp.accept_type(self)
 
     def visit_identifier(self, element: Identifier) -> None:
-        
+
         return None
 
 
@@ -1084,8 +1082,8 @@ class TypeDepthFirstVisitor(TypeVisitor):
         return None
 
     def visit_if(self, element: If) -> Type:
-        element.condition_exp.accept_type(self)
-        element.if_statement.accept_type(self)
+        exp_type = element.condition_exp.accept_type(self)
+        sta_element.if_statement.accept_type(self)
         element.else_statement.accept_type(self)
         return None
 
@@ -1140,7 +1138,8 @@ class TypeDepthFirstVisitor(TypeVisitor):
         return None
 
     def visit_array_length(self, element: ArrayLength) -> Type:
-        element.length_exp.accept_type(self)
+        if (type(element.length_exp.accept_type(self)) != Inte):
+            self.a
         return None
 
     def visit_call(self, element: Call) -> Type:
@@ -1205,103 +1204,335 @@ class TypeCheckingVisitor(TypeVisitor):
         return self.symbol_table
 
     def visit_program(self, element: Program) -> Type:
-        pass
+        element.main_class.accept_type(self)
+        for index in range(element.class_decl_list.size()):
+            element.class_decl_list.element_at(index).accept_type(self)
+
+        return None
 
     def visit_main_class(self, element: MainClass) -> Type:
-        pass
+        element.class_name_identifier.accept_type(self)
+        element.arg_name_ideintifier.accept_type(self)
+        element.statement.accept_type(self)
+        return None
 
     def visit_class_decl_extends(self, element: ClassDeclExtends) -> Type:
-        pass
+        element.class_name.accept_type(self)
+        element.super_class_name.accept_type(self)
+
+        for index in range(element.method_decl_list.size()):
+            element.method_decl_list.element_at(index).accept_type(self)
+        
+        for index in range(element.var_decl_list.size()):
+            element.var_decl_list.element_at(index).accept_type(self)
+
+        return None
 
     def visit_class_decl_simple(self, element: ClassDeclSimple) -> Type:
-        pass
+        element.class_name.accept_type(self)
+
+        self.symbol_table.set_curr_class(element.class_name.name)
+
+        for index in range(element.var_decl_list.size()):
+            element.var_decl_list.element_at(index).accept_type(self)
+
+        for index in range(element.method_decl_list.size()):
+            element.method_decl_list.element_at(index).accept_type(self)
+
+        return None
 
     def visit_var_decl(self, element: VarDecl) -> Type:
-        pass
+        element.name.accept_type(self)
+        element.type.accept_type(self)
+
+        return None
 
     def visit_method_decl(self, element: MethodDecl) -> Type:
-        pass
+        
+        methodTypeReturn = element.type.accept_type(self)
+        
+        element.name.accept_type(self)
+
+        for index in range(element.formal_param_list.size()):
+            element.formal_param_list.element_at(index).accept_type(self)
+
+        for index in range(element.var_decl_list.size()):
+            element.var_decl_list.element_at(index).accept_type(self)
+
+        for index in range(element.statement_list.size()):
+            element.statement_list.element_at(index).accept_type(self)
+
+        expressionTypeReturn = element.return_exp.accept_type(self)
+
+        if type(expressionTypeReturn) != type(methodTypeReturn):
+            self.add_semantic_error(SemanticErrorType.RETURN_TYPE_MISMATCH)
+
+        return None
 
     def visit_formal(self, element: Formal) -> Type:
-        pass
+        element.name.accept_type(self)
+        element.type.accept_type(self)
+
+        return None
 
     def visit_int_array_type(self, element: IntArrayType) -> Type:
-        pass
+        return element
 
     def visit_boolean_type(self, element: BooleanType) -> Type:
-        pass
+        return element
 
     def visit_integer_type(self, element: IntegerType) -> Type:
-        pass
+        return element
 
     def visit_identifier_type(self, element: IdentifierType) -> Type:
-        pass
+        return element
 
     def visit_block(self, element: Block) -> Type:
-        pass
+        
+        for index in range(element.statement_list.size()):
+            element.statement_list.element_at(index).accept_type(self)
+        
+        return None
 
     def visit_if(self, element: If) -> Type:
-        pass
+        
+        expressionResponse = element.condition_exp.accept_type(self)
+        element.if_statement.accept_type(self)
+        element.else_statement.accept_type(self)
+
+        if (type(expressionResponse) != BooleanType):
+            self.add_semantic_error(SemanticErrorType.IF_TYPE_MISMATCH)
+
+        return None
 
     def visit_while(self, element: While) -> Type:
-        pass
+        
+        expressionResponse = element.condition_exp.accept_type(self)
+        element.statement.accept_type(self)
+
+        if (type(expressionResponse) != BooleanType):
+            self.add_semantic_error(SemanticErrorType.WHILE_TYPE_MISMATCH)
+
+        return None
 
     def visit_print(self, element: Print) -> Type:
-        pass
 
+        element.print_exp.accept_type(self)
+        return None
+        
     def visit_assign(self, element: Assign) -> Type:
-        pass
+        
+        leftResponse = element.left_side.accept_type(self)
+        rightResponse = element.right_side.accept_type(self)
+
+        if not(self.symbol_table.contains_key(element.left_side.name)):
+            self.add_semantic_error(SemanticErrorType.UNDECLARED_IDENTIFIER)
+        
+        if type(leftResponse) != type(rightResponse):
+            self.add_semantic_error(SemanticErrorType.ASSIGN_TYPE_MISMATCH)
+
+        return None
 
     def visit_array_assign(self, element: ArrayAssign) -> Type:
-        pass
+        
+        element.array_name.accept_type(self)
+        expressionResponse = element.array_exp.accept_type(self)
+        rightResponse = element.right_side.accept_type(self)
+        
+        if self.symbol_table.contains_key(element.array_name.name):
+            self.add_semantic_error(SemanticErrorType.UNDECLARED_IDENTIFIER)
+
+        if type(expressionResponse) != IntegerType:
+            self.add_semantic_error(SemanticErrorType.INDEX_TYPE_MISMATCH)
+        
+        if type(rightResponse) != IntegerType:
+            self.add_semantic_error(SemanticErrorType.ARRAY_ASSIGN_TYPE_MISMATCH)
+
+        return None
 
     def visit_and(self, element: And) -> Type:
-        pass
+        
+        leftResponse = element.left_side.accept_type(self)
+        rightResponse = element.right_side.accept_type(self)
+
+        if type(leftResponse) != BooleanType or type(rightResponse) != BooleanType:
+            self.add_semantic_error(SemanticErrorType.AND_TYPE_MISMATCH)
+
+        return BooleanType()
 
     def visit_less_than(self, element: LessThan) -> Type:
-        pass
+
+        leftResponse = element.left_side.accept_type(self)
+        rightResponse = element.right_side.accept_type(self)
+
+        if type(leftResponse) != IntegerType or type(rightResponse) != IntegerType:
+            self.add_semantic_error(SemanticErrorType.LESS_THAN_TYPE_MISMATCH)
+
+        return IntegerType()
 
     def visit_plus(self, element: Plus) -> Type:
-        pass
+     
+        leftResponse = element.left_side.accept_type(self)
+        rightResponse = element.right_side.accept_type(self)
+
+        if type(leftResponse) != IntegerType or type(rightResponse) != IntegerType:
+            self.add_semantic_error(SemanticErrorType.PLUS_TYPE_MISMATCH)
+
+        return IntegerType()
 
     def visit_minus(self, element: Minus) -> Type:
-        pass
+        
+        leftResponse = element.left_side.accept_type(self)
+        rightResponse = element.right_side.accept_type(self)
+
+        if type(leftResponse) != IntegerType or type(rightResponse) != IntegerType:
+            self.add_semantic_error(SemanticErrorType.MINUS_TYPE_MISMATCH)
+
+        return IntegerType()
 
     def visit_times(self, element: Times) -> Type:
-        pass
+
+        leftResponse = element.left_side.accept_type(self)
+        rightResponse = element.right_side.accept_type(self)
+
+        if type(leftResponse) != IntegerType or type(rightResponse) != IntegerType:
+            self.add_semantic_error(SemanticErrorType.TIMES_TYPE_MISMATCH)
+
+        return IntegerType()
 
     def visit_array_lookup(self, element: ArrayLookup) -> Type:
-        pass
+
+        inResponse = element.in_side_exp.accept_type(self)
+        outResponse = element.out_side_exp.accept_type(self)
+        
+        if type(inResponse) != IntegerType:
+            self.add_semantic_error(SemanticErrorType.INDEX_TYPE_MISMATCH)
+
+        if type(outResponse) != IntegerType:
+            self.add_semantic_error(SemanticErrorType.ARRAY_ASSIGN_TYPE_MISMATCH)
+
+        return IntegerType()
 
     def visit_array_length(self, element: ArrayLength) -> Type:
-        pass
+        
+        expressionResponse = element.length_exp.accept_type(self)
+        
+        if type(expressionResponse) != IntArrayType:
+            self.add_semantic_error(SemanticErrorType.ARRAY_ASSIGN_TYPE_MISMATCH)
+
+        return IntegerType()
 
     def visit_call(self, element: Call) -> Type:
-        pass
+        
+        expressionResponse = element.callee_exp.accept_type(self)
+        element.callee_name.accept_type(self)
+
+        argumentsType = []
+        methodType = None
+
+        if not(expressionResponse):
+            self.add_semantic_error(SemanticErrorType.UNDECLARED_CLASS)
+        
+        if type(expressionResponse) != IdentifierType:
+            self.add_semantic_error(SemanticErrorType.INVALID_OBJECT_IDENTIFIER)
+        
+        elif type(expressionResponse) == IdentifierType:
+
+            if not(self.symbol_table.contains_key(expressionResponse.name)):
+                self.add_semantic_error(SemanticErrorType.UNDECLARED_CLASS)
+
+            for index in range(element.arg_list.size()):
+                argumentsType.append(element.arg_list.element_at(index).accept_type(self))
+
+            class_entry = self.symbol_table.get_class_entry(expressionResponse.name)
+
+            if class_entry.contains_method(element.callee_name.name):
+                    currentMethod = class_entry.get_method(element.callee_name.name)
+
+                    currentMethodType = currentMethod.return_type
+
+                    if element.arg_list.size() != len(currentMethod.param_list):
+                        self.add_semantic_error(SemanticErrorType.WRONG_ARG_NUMBER)
+
+                    if type(expressionResponse) != type(currentMethodType):
+                        self.add_semantic_error(SemanticErrorType.RETURN_TYPE_MISMATCH)
+
+                    else:
+                        for index in range(len(argumentsType)):
+                            if type(argumentsType[index]) != type(currentMethod.param[index]):
+                                self.add_semantic_error(SemanticErrorType.ARG_TYPE_MISMATCH)
+                
+            else:
+                self.add_semantic_error(SemanticErrorType.UNDECLARED_METHOD)
+
+        return methodType    
+        
 
     def visit_integer_literal(self, element: IntegerLiteral) -> Type:
-        pass
+        return IntegerType()
 
     def visit_true_exp(self, element: TrueExp) -> Type:
-        pass
+        return BooleanType()
 
     def visit_false_exp(self, element: FalseExp) -> Type:
-        pass
+        return BooleanType()
 
     def visit_identifier_exp(self, element: IdentifierExp) -> Type:
-        pass
+        
+        nameResponse = None
 
+        if self.symbol_table.curr_class.contains_field(element.name):
+            nameResponse = self.symbol_table.curr_class.get_field(element.name)
+        
+        if self.symbol_table.curr_method != None:
+
+            if self.symbol_table.curr_method.contains_local(element.name):
+                nameResponse = self.symbol_table.curr_method.get_locals(element.name)
+            
+            if self.symbol_table.curr_method.contains_param(element.name):
+                nameResponse = self.symbol_table.curr_method.get_param_by_name(element.name)
+
+        return nameResponse
+        
     def visit_this(self, element: This) -> Type:
         pass
 
     def visit_new_array(self, element: NewArray) -> Type:
-        pass
+
+        expressionResponse = element.new_exp.accept_type(self)
+
+        if (type(expressionResponse) != IntegerType):
+            self.add_semantic_error(SemanticErrorType.NEW_ARRAY_TYPE_MISMATCH)
+
+        return IntArrayType()
 
     def visit_new_object(self, element: NewObject) -> Type:
-        pass
+        element.object_name.accept_type(self)
+        if not(self.symbol_table.contains_key(element.object_name.name)):
+            self.add_semantic_error(SemanticErrorType.NEW_OBJECT_UNDECLARED_CLASS)
 
     def visit_not(self, element: Not) -> Type:
-        pass
+        expressionResponse = element.negated_exp.accept_type(self)
 
+        if(type(expressionResponse) != BooleanType):
+            self.add_semantic_error(SemanticErrorType.NOT_TYPE_MISMATCH)
+            return None
+
+        return BooleanType()
+        
     def visit_identifier(self, element: Identifier) -> Type:
-        pass
+
+        nameResponse = None
+
+        if self.symbol_table.curr_class.contains_field(element.name):
+            nameResponse = self.symbol_table.curr_class.get_field(element.name)
+        
+        if self.symbol_table.curr_method != None:
+
+            if self.symbol_table.curr_method.contains_local(element.name):
+                nameResponse = self.symbol_table.curr_method.get_locals(element.name)
+            
+            if self.symbol_table.curr_method.contains_param(element.name):
+                nameResponse = self.symbol_table.curr_method.get_param_by_name(element.name)
+
+        return nameResponse

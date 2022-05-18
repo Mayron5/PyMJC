@@ -33,31 +33,31 @@
 
 1. Qual é o nome do relator?
 
-    > Escreva sua resposta aqui
+    Sabrina Silveira Oliveira
 
 2. A etapa foi completamente ou parcialmente concluída?
 
-    > Escreva sua resposta aqui
+    Parcialmente concluída.
 
 3. No caso de parcialmente concluída, o que não foi concluído?
 
-    > Escreva sua resposta aqui
+    Parte do visitor não foi concluído.
 
 4. O programa passa nos testes automatizados?
     
-    > Escreva sua resposta aqui
+    O programa passa em alguns testes.
 
 5. Algum erro de execução foi encontrado para alguma das entradas? Quais?
     
-    > Escreva sua resposta aqui
+    Não conseguimos identificar qual a entrada com erro.
 
 6. Quais as dificuldades encontradas para realização da etapa do projeto?
     
-    > Escreva sua resposta aqui
+    Na implementação dos visitors, principalmente na parte de validação e retornos. 
 
 7. Qual a participação de cada membro da equipe na etapa de execução?
     
-    > Escreva sua resposta aqui
+      Não houve divisão de tarefas entre os membros, todos ajudaram na implementação do trabalho. 
 
 
 # 3º Relatóio: Etapa AI-c (Tradução para o Código Intermediário)
