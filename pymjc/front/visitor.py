@@ -659,9 +659,9 @@ class FillSymbolTableVisitor(Visitor):
             element.var_decl_list.element_at(index).accept(self)
 
         for index in range(element.method_decl_list.size()):
-     
-            
+            element.method_decl_list.element_at(index).accept(self)
 
+        
     def visit_class_decl_simple(self, element: ClassDeclSimple) -> None:
         
         class_entry = ClassEntry()
