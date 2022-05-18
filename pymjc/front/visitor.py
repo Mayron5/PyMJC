@@ -647,6 +647,7 @@ class FillSymbolTableVisitor(Visitor):
 
         classEntry = ClassEntry(element.super_class_name.name)
         newElement = self.symbol_table.add_scope(element.class_name.name, classEntry)
+
         if(not newElement):
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
         element.class_name.accept(self)
@@ -666,7 +667,7 @@ class FillSymbolTableVisitor(Visitor):
 
         newClassDeclaration = self.symbol_table.add_scope(element.class_name.name, class_entry)
 
-        if not(newClassDeclaration):
+        if (not newClassDeclaration):
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
 
         element.class_name.accept(self)
@@ -687,7 +688,7 @@ class FillSymbolTableVisitor(Visitor):
         else:
             newVarDeclaration = self.symbol_table.add_local(element.name.name, element.type)
 
-        if not(newVarDeclaration):
+        if (not newVarDeclaration):
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_VAR)
             
         element.name.accept(self)
@@ -698,7 +699,7 @@ class FillSymbolTableVisitor(Visitor):
         method_entry = MethodEntry(element.type)
         newMethodDeclaration = self.symbol_table.add_method(element.name.name, method_entry)
 
-        if not(newMethodDeclaration):
+        if (not newMethodDeclaration):
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_METHOD)
 
         for index in range(element.formal_param_list.size()):
@@ -718,7 +719,7 @@ class FillSymbolTableVisitor(Visitor):
 
         newFormal = self.symbol_table.add_param(element.name.name, element.type)
 
-        if not(newFormal):
+        if (not newFormal):
             self.add_semantic_error(SemanticErrorType.DUPLICATED_ARG)
         
         element.type.accept(self)
@@ -759,7 +760,7 @@ class FillSymbolTableVisitor(Visitor):
         
         existsElement = self.symbol_table.contains_key(element.left_side.name)
 
-        if not(existsElement):
+        if (not existsElement):
             self.add_semantic_error(SemanticErrorType.UNDECLARED_IDENTIFIER)
         
         element.left_side.accept(self)
@@ -1309,7 +1310,7 @@ class TypeCheckingVisitor(TypeVisitor):
         leftResponse = element.left_side.accept_type(self)
         rightResponse = element.right_side.accept_type(self)
 
-        if not(self.symbol_table.contains_key(element.left_side.name)):
+        if (not self.symbol_table.contains_key(element.left_side.name)):
             self.add_semantic_error(SemanticErrorType.UNDECLARED_IDENTIFIER)
         
         if type(leftResponse) != type(rightResponse):
@@ -1414,7 +1415,7 @@ class TypeCheckingVisitor(TypeVisitor):
         argumentsType = []
         methodType = None
 
-        if not(expressionResponse):
+        if (not expressionResponse):
             self.add_semantic_error(SemanticErrorType.UNDECLARED_CLASS)
         
         if type(expressionResponse) != IdentifierType:
@@ -1422,7 +1423,7 @@ class TypeCheckingVisitor(TypeVisitor):
         
         elif type(expressionResponse) == IdentifierType:
 
-            if not(self.symbol_table.contains_key(expressionResponse.name)):
+            if (not self.symbol_table.contains_key(expressionResponse.name)):
                 self.add_semantic_error(SemanticErrorType.UNDECLARED_CLASS)
 
             for index in range(element.arg_list.size()):
@@ -1492,7 +1493,7 @@ class TypeCheckingVisitor(TypeVisitor):
 
     def visit_new_object(self, element: NewObject) -> Type:
         element.object_name.accept_type(self)
-        if not(self.symbol_table.contains_key(element.object_name.name)):
+        if (not self.symbol_table.contains_key(element.object_name.name)):
             self.add_semantic_error(SemanticErrorType.NEW_OBJECT_UNDECLARED_CLASS)
 
     def visit_not(self, element: Not) -> Type:
