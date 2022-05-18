@@ -642,25 +642,22 @@ class FillSymbolTableVisitor(Visitor):
 
     def visit_class_decl_extends(self, element: ClassDeclExtends) -> None:
 
-        if not(self.symbol_table.contains_key(element.super_class_name.name)):
+        if(not self.symbol_table.contains_key(element.super_class_name.name)):
             self.add_semantic_error(SemanticErrorType.UNDECLARED_SUPER_CLASS)
 
-        class_entry = ClassEntry(element.super_class_name.name)
-
-        if not(self.symbol_table.add_scope(element.class_name.name, class_entry)):
+        classEntry = ClassEntry(element.super_class_name.name)
+        newElement = self.symbol_table.add_scope(element.class_name.name, classEntry)
+        if(not newElement):
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
-
-        if not(self.symbol_table.contains_key(element.super_class_name.name)):
-            self.symbol_table.add_extends_entry(element.class_name.name, element.super_class_name.name)
-
         element.class_name.accept(self)
         element.super_class_name.accept(self)
+        for var_index in range(element.var_decl_list.size()):
+            element.var_decl_list.element_at(var_index).accept(self)
+        for method_index in range(element.method_decl_list.size()):
+            element.method_decl_list.element_at(method_index).accept(self)
 
-        for index in range(element.var_decl_list.size()):
-            element.var_decl_list.element_at(index).accept(self)
-
-        for index in range(element.method_decl_list.size()):
-            element.method_decl_list.element_at(index).accept(self)
+        if(self.symbol_table.contains_key(element.super_class_name.name)):
+            self.symbol_table.add_extends_entry(element.class_name.name, element.super_class_name.name)
 
         
     def visit_class_decl_simple(self, element: ClassDeclSimple) -> None:
