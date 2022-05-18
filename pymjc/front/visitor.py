@@ -700,33 +700,31 @@ class FillSymbolTableVisitor(Visitor):
         method_entry = MethodEntry(element.type)
         newMethodDeclaration = self.symbol_table.add_method(element.name.name, method_entry)
 
-        if newMethodDeclaration:
-
-            for index in range(element.formal_param_list.size()):
-                element.formal_param_list.element_at(index).accept(self)
-
-            for index in range(element.var_decl_list.size()):
-                element.var_decl_list.element_at(index).accept(self)
-
-            for index in range(element.statement_list.size()):
-                element.statement_list.element_at(index).accept(self)
-
-            element.name.accept(self)
-            element.type.accept(self)
-            element.return_exp.accept(self)
-
-        else:
+        if not(newMethodDeclaration):
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_METHOD)
 
+        for index in range(element.formal_param_list.size()):
+            element.formal_param_list.element_at(index).accept(self)
+
+        for index in range(element.var_decl_list.size()):
+            element.var_decl_list.element_at(index).accept(self)
+
+        for index in range(element.statement_list.size()):
+            element.statement_list.element_at(index).accept(self)
+
+        element.name.accept(self)
+        element.type.accept(self)
+        element.return_exp.accept(self)
+ 
     def visit_formal(self, element: Formal) -> None:
 
         newFormal = self.symbol_table.add_param(element.name.name, element.type)
 
-        if newFormal:
-            element.name.accept(self)
-            element.type.accept(self)
-        else:
+        if not(newFormal):
             self.add_semantic_error(SemanticErrorType.DUPLICATED_ARG)
+        
+        element.type.accept(self)
+        element.name.accept(self)
 
     def visit_int_array_type(self, element: IntArrayType) -> None:
         return None
@@ -760,12 +758,14 @@ class FillSymbolTableVisitor(Visitor):
         element.print_exp.accept(self)
 
     def visit_assign(self, element: Assign) -> None:
-       
-        if self.symbol_table.contains_key(element.left_side.name):
-            element.right_side.accept(self)
-            element.left_side.accept(self)
-        else:
+        
+        existsElement = self.symbol_table.contains_key(element.left_side.name)
+
+        if not(existsElement):
             self.add_semantic_error(SemanticErrorType.UNDECLARED_IDENTIFIER)
+        
+        element.left_side.accept(self)
+        element.right_side.accept(self)
 
     def visit_array_assign(self, element: ArrayAssign) -> None:
 
@@ -819,20 +819,16 @@ class FillSymbolTableVisitor(Visitor):
         return None
 
     def visit_true_exp(self, element: TrueExp) -> None:
-
-        element.accept(self)
+        return None
 
     def visit_false_exp(self, element: FalseExp) -> None:
-
-        element.accept(self)
+        return None
 
     def visit_identifier_exp(self, element: IdentifierExp) -> None:
-
-        element.accept(self)
+        return None
 
     def visit_this(self, element: This) -> None:
-
-        element.accept(self)
+        return None
 
     def visit_new_array(self, element: NewArray) -> None:
 
@@ -847,7 +843,6 @@ class FillSymbolTableVisitor(Visitor):
         element.negated_exp.accept_type(self)
 
     def visit_identifier(self, element: Identifier) -> None:
-
         return None
 
 
