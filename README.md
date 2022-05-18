@@ -7,8 +7,8 @@ Este repositório tem como objetivo fazer as entregas do projeto da disciplina d
 Os seguintes alunos (equipe 12) são responsáveis pelo projeto: 
 
 -  Mátricula: 496770 | Aluno: Mayron Alves da Silva 
--  Mátricula: XXXX | Aluno: XXXXX
--  Mátricula: XXXX | Aluno: XXXXX
+-  Mátricula: 494013 | Aluno: Sabrina Sioli Oliveira
+-  Mátricula: 475107 | Aluno: Carlos Eduardo Pinheiro Santos
 
 # Método de Avaliação
 
