@@ -1,15 +1,9 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from ast import arguments
 import enum
-from msilib.schema import Class
-from tkinter import E, SE
-from turtle import right
-from unicodedata import name
 
 from pymjc.front.ast import *
 from pymjc.front.symbol import *
-
 
 class SemanticErrorType(enum.Enum):
     ALREADY_DECLARED_CLASS = 1
