@@ -650,7 +650,8 @@ class FillSymbolTableVisitor(Visitor):
         if not(self.symbol_table.add_scope(element.class_name.name, class_entry)):
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
 
-        self.symbol_table.add_extends_entry(element.class_name.name, element.super_class_name.name)
+        if not(self.symbol_table.contains_key(element.super_class_name.name)):
+            self.symbol_table.add_extends_entry(element.class_name.name, element.super_class_name.name)
 
         element.class_name.accept(self)
         element.super_class_name.accept(self)
@@ -831,7 +832,6 @@ class FillSymbolTableVisitor(Visitor):
         return None
 
     def visit_new_array(self, element: NewArray) -> None:
-
         element.new_exp.accept(self)
 
     def visit_new_object(self, element: NewObject) -> None:
