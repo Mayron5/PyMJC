@@ -648,7 +648,7 @@ class FillSymbolTableVisitor(Visitor):
         class_entry = ClassEntry(element.super_class_name.name)
 
         if not(self.symbol_table.add_scope(element.class_name.name, class_entry)):
-            elf.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
+            self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
 
         self.symbol_table.add_extends_entry(element.class_name.name, element.super_class_name.name)
 
@@ -668,18 +668,18 @@ class FillSymbolTableVisitor(Visitor):
 
         newClassDeclaration = self.symbol_table.add_scope(element.class_name.name, class_entry)
 
-        if (newClassDeclaration):
-            element.class_name.accept(self)
-
-            for index in range(element.method_decl_list.size()):
-                element.method_decl_list.element_at(index).accept(self)
-
-            for index in range(element.var_decl_list.size()):
-                element.var_decl_list.element_at(index).accept(self)
-
-        else:
+        if not(newClassDeclaration):
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
 
+        element.class_name.accept(self)
+
+        for index in range(element.method_decl_list.size()):
+            element.method_decl_list.element_at(index).accept(self)
+
+        for index in range(element.var_decl_list.size()):
+            element.var_decl_list.element_at(index).accept(self)
+
+            
     def visit_var_decl(self, element: VarDecl) -> None:
 
         newVarDeclaration = None
@@ -689,11 +689,11 @@ class FillSymbolTableVisitor(Visitor):
         else:
             newVarDeclaration = self.symbol_table.add_local(element.name.name, element.type)
 
-        if newVarDeclaration:
-            element.name.accept(self)
-            element.type.accept(self)
-        else:
+        if not(newVarDeclaration):
             self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_VAR)
+            
+        element.name.accept(self)
+        element.type.accept(self)
 
     def visit_method_decl(self, element: MethodDecl) -> None:
 
