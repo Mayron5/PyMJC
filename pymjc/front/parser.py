@@ -31,8 +31,9 @@ class MJParser(Parser):
 
     @_('MainClass ClassDeclarationStar')
     def Goal(self, p):
+        p.ClassDeclarationStar.class_decl_list.reverse()
         return Program(p.MainClass, p.ClassDeclarationStar)
-
+    
     @_('CLASS Identifier LEFTBRACE PUBLIC STATIC VOID MAIN LEFTPARENT STRING LEFTSQRBRACKET RIGHTSQRBRACKET Identifier RIGHTPARENT LEFTBRACE Statement RIGHTBRACE RIGHTBRACE')
     def MainClass(self, p):
         return MainClass(p.Identifier0, p.Identifier1, p.Statement)
@@ -50,13 +51,14 @@ class MJParser(Parser):
     def ClassDeclaration(self, p):
         if p.SuperOpt is None:
             return ClassDeclSimple(p.Identifier, p.VarDeclarationStar, p.MethodDeclarationStar)
-        else:
-            return ClassDeclExtends(p.Identifier, p.SuperOpt, p.VarDeclarationStar, p.MethodDeclarationStar)
+        
+        return ClassDeclExtends(p.Identifier, p.SuperOpt, p.VarDeclarationStar, p.MethodDeclarationStar)
+
 
     @_('Empty')
     def SuperOpt(self, p):
-        return None
-
+        return p.Empty
+    
     @_('EXTENDS Identifier')
     def SuperOpt(self, p):
         return p.Identifier
@@ -85,6 +87,7 @@ class MJParser(Parser):
 
     @_('PUBLIC Type Identifier LEFTPARENT FormalParamListOpt RIGHTPARENT LEFTBRACE VarDeclarationStar StatementStar RETURN Expression SEMICOLON RIGHTBRACE')
     def MethodDeclaration(self, p):
+        p.StatementStar.statement_list.reverse()
         return MethodDecl(p.Type, p.Identifier, p.FormalParamListOpt, p.VarDeclarationStar, p.StatementStar, p.Expression)
 
     @_('Empty')
@@ -92,7 +95,7 @@ class MJParser(Parser):
         return FormalList()
         
     @_('FormalParamStar')
-    def FormalParamListOpt(self, p):
+    def FormalParamListOpt(self, p):            
         return p.FormalParamStar
 
     @_('FormalParam')
@@ -109,7 +112,7 @@ class MJParser(Parser):
     @_('Type Identifier')
     def FormalParam(self, p):
         return Formal(p.Type, p.Identifier)
-
+        
     ###################################
     #Type Declarations                #
     ###################################
@@ -128,7 +131,7 @@ class MJParser(Parser):
 
     @_('Identifier')
     def Type(self, p):
-        return IdentifierType(str(p.Identifier))
+        return IdentifierType(p.Identifier.name)
 
     ###################################
     #Statements Declarations          #
@@ -244,7 +247,7 @@ class MJParser(Parser):
 
     @_('Identifier')
     def Expression(self, p):
-        return IdentifierExp(str(p.Identifier))
+        return IdentifierExp(p.Identifier.name)
 
     @_('Literal')
     def Expression(self, p):
