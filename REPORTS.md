@@ -71,7 +71,7 @@
 
 3. No caso de parcialmente concluída, o que não foi concluído?
 
-    > O visit_int_array_type, visit_boolean_type, visit_integer_type, visit_identifier_type
+    > O visit_int_array_type, visit_boolean_type, visit_integer_type, visit_identifier_type, visit_call
 
 4. O programa passa nos testes automatizados?
     

@@ -1072,12 +1072,6 @@ class TypeCheckingVisitor(TypeVisitor):
         element.print_exp.accept_type(self)
         return None
 
-
-        if (type(expressionResponse) != BooleanType):
-            self.add_semantic_error(SemanticErrorType.WHILE_TYPE_MISMATCH)
-
-        return None
-
     def visit_print(self, element: Print) -> Type:
 
         element.print_exp.accept_type(self)
@@ -1704,27 +1698,7 @@ class TranslateVisitor(IRVisitor):
 
     @abstractmethod
     def visit_call(self, element: Call) -> translate.Exp:
-        calle_exp:tree.EXP=element.callee_exp.accept_ir(self).un_ex()
-        exp_list=tree.ExpList
-     
-        #Symbol
-        exp_list.add_head(calle_exp)
-        for index in range(element.arg_list):
-            exp_list.add_tail(element.arg_list.element_at(index).accept_ir(self).un_ex())
-        
-        label:str="$"
-        if(isinstance(element.callee_exp,IdentifierExp)):
-            #Checa a existencia 
-            identifier_exp:IdentifierExp=element.callee_exp
-            label=identifier_exp.name,"$",element.callee_name_id.name
-        elif(isinstance(element.callee_exp,NewObject)):
-            new_object:NewObject=element.callee_exp;
-            if(self.symbol_table.get_class_entry(new_object.object_name_id) is not None):
-                label=new_object.object_name_id,"$",element.callee_name_id
-        elif(isinstance(element.callee_exp,This)):
-            label=self.symbol_table.curr_class_name,"$",element.callee_name_id.name
-        
-        return translate.Exp(tree.CALL(tree.NAME(tree.LABEL(Label(label))),exp_list))
+        pass
 
     @abstractmethod
     def visit_integer_literal(self, element: IntegerLiteral) -> translate.Exp:
