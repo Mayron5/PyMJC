@@ -488,10 +488,10 @@ class FillSymbolTableVisitor(Visitor):
             self.semantic_errors[error_type.name] = 0
 
     def fill_semantic_errors(self, semantic_errors) -> None:
-        self.semantic_errors = semantic_errors
+            self.semantic_errors = semantic_errors
 
     def add_semantic_error(self, error_type: SemanticErrorType) -> None:
-        self.semantic_errors[error_type.name] += 1
+            self.semantic_errors[error_type.name] += 1
 
     def get_symbol_table(self) -> SymbolTable:
         return self.symbol_table
@@ -547,25 +547,6 @@ class FillSymbolTableVisitor(Visitor):
 
         return None
 
-        if(not self.symbol_table.contains_key(element.super_class_name.name)):
-            self.add_semantic_error(SemanticErrorType.UNDECLARED_SUPER_CLASS)
-
-        classEntry = ClassEntry(element.super_class_name.name)
-        newElement = self.symbol_table.add_scope(element.class_name.name, classEntry)
-
-        if(not newElement):
-            self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
-        element.class_name.accept(self)
-        element.super_class_name.accept(self)
-        for var_index in range(element.var_decl_list.size()):
-            element.var_decl_list.element_at(var_index).accept(self)
-        for method_index in range(element.method_decl_list.size()):
-            element.method_decl_list.element_at(method_index).accept(self)
-
-        if(self.symbol_table.contains_key(element.super_class_name.name)):
-            self.symbol_table.add_extends_entry(element.class_name.name, element.super_class_name.name)
-
-        
     def visit_class_decl_simple(self, element: ClassDeclSimple) -> None:
         self.symbol_table.set_curr_class(element.class_name_id.name)
         element.class_name_id.accept(self)
@@ -578,20 +559,6 @@ class FillSymbolTableVisitor(Visitor):
             element.method_decl_list.element_at(index).accept(self)
 
 
-        newClassDeclaration = self.symbol_table.add_scope(element.class_name.name, class_entry)
-
-        if (not newClassDeclaration):
-            self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_CLASS)
-
-        element.class_name.accept(self)
-
-        for index in range(element.method_decl_list.size()):
-            element.method_decl_list.element_at(index).accept(self)
-
-        for index in range(element.var_decl_list.size()):
-            element.var_decl_list.element_at(index).accept(self)
-
-            
     def visit_var_decl(self, element: VarDecl) -> None:
         element.type.accept(self)
         element.name_id.accept(self)
@@ -629,25 +596,6 @@ class FillSymbolTableVisitor(Visitor):
         return None
 
 
-        method_entry = MethodEntry(element.type)
-        newMethodDeclaration = self.symbol_table.add_method(element.name.name, method_entry)
-
-        if (not newMethodDeclaration):
-            self.add_semantic_error(SemanticErrorType.ALREADY_DECLARED_METHOD)
-
-        for index in range(element.formal_param_list.size()):
-            element.formal_param_list.element_at(index).accept(self)
-
-        for index in range(element.var_decl_list.size()):
-            element.var_decl_list.element_at(index).accept(self)
-
-        for index in range(element.statement_list.size()):
-            element.statement_list.element_at(index).accept(self)
-
-        element.name.accept(self)
-        element.type.accept(self)
-        element.return_exp.accept(self)
- 
     def visit_formal(self, element: Formal) -> None:
         element.type.accept(self)
         element.type.accept(self)
@@ -655,13 +603,6 @@ class FillSymbolTableVisitor(Visitor):
             self.add_semantic_error(SemanticErrorType.DUPLICATED_ARG)
             MJLogger.semantic_log(self.src_file_name, SemanticErrorType.DUPLICATED_ARG.name, self.symbol_table.curr_class_name + "#" + self.symbol_table.curr_method_name + "#" + element.name_id.name)            
 
-        newFormal = self.symbol_table.add_param(element.name.name, element.type)
-
-        if (not newFormal):
-            self.add_semantic_error(SemanticErrorType.DUPLICATED_ARG)
-        
-        element.type.accept(self)
-        element.name.accept(self)
 
     def visit_int_array_type(self, element: IntArrayType) -> None:
         return None
@@ -675,6 +616,7 @@ class FillSymbolTableVisitor(Visitor):
     def visit_identifier_type(self, element: IdentifierType) -> None:
         return None
 
+    
     def visit_block(self, element: Block) -> None:
         for index in range(element.statement_list.size()):
             element.statement_list.element_at(index).accept(self)
@@ -791,7 +733,6 @@ class FillSymbolTableVisitor(Visitor):
 
     def visit_identifier(self, element: Identifier) -> None:
         return None
-
 
 
 
