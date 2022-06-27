@@ -1,13 +1,15 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 import enum
+from tkinter.tix import Tree
 from typing import List
 from pymjc.back.assem import MOVE
 
 from pymjc.front.ast import *
-from pymjc.front.frame import Frame
+from pymjc.front.frame import Frame, Access
 from pymjc.front import translate
-from pymjc.front import tree #CONST, Stm, MOVE
+from pymjc.front import tree
+from pymjc.front.temp import Label #CONST, Stm, MOVE
 from pymjc.front.visitorkinds import *
 from pymjc.front.symbol import *
 from pymjc.log import MJLogger
@@ -1658,21 +1660,58 @@ class TranslateVisitor(IRVisitor):
         for index in range (element.statement_list.size()):
             exp: tree.EXP = tree.EXP(element.statement_list.element_at(index).accept_ir(self).un_ex())
 
-            const = tree.ESEQ(tree.SEQ(tree.EXP(const), exp), tree.CONST(0))
-        
-        return translate.Exp(const)
+        return translate.Exp(tree.ESEQ(tree.SEQ(tree.EXP(const), exp), tree.CONST(0)))
 
     @abstractmethod
     def visit_if(self, element: If) -> translate.Exp:
-        pass
-  
+        condition: translate.tree = element.condition_exp.accept_ir(self).un_ex()
+        true_exp: tree.Stm = tree.EXP(element.if_statement.accept_ir(self).un_ex())
+        false_exp: tree.Stm = tree.EXP(element.else_statement.accept_ir(self).un_ex())
+
+        true_lbl: tree.Label = Label()
+        false_lbl: tree.Label = Label()
+        done_lbl: tree.Label = Label()
+
+        cjump = tree.CJUMP = tree.CJUMP(tree.CJUMP.EQ, condition, tree.CONST(1), true_lbl, false_lbl)
+        
+        true_stm: tree.SEQ = tree.SEQ( tree.SEQ(tree.LABEL(true_lbl), true_exp), tree.JUMP(done_lbl))
+        false_stm: tree.SEQ = tree.SEQ(tree.SEQ(tree.LABEL(false_lbl), false_exp), tree.JUMP(done_lbl))
+        
+        stm: tree.SEQ = tree.SEQ(cjump, tree.SEQ(true_stm, tree.SEQ(false_stm, done_lbl)))
+
+        return translate.Exp(tree.ESEQ(stm), tree.CONST(0))
+
+
     @abstractmethod
     def visit_while(self, element: While) -> translate.Exp:
-        pass
+        cond_exp: translate.Exp = element.cond_exp.accept_ir(self)
+        stm: translate.Exp = element.statement.accept_ir(self)
+
+        test_lbl: tree.LABEL = tree.LABEL(temp.Label())
+        done_lbl: tree.LABEL = tree.LABEL(temp.Label())
+
+        body_label: tree.LABEL = tree.LABEL(temp.Label())
+
+        not_cond_exp: tree.BINOP = tree.BINOP(tree.BINOP.XOR, tree.CONST(1), cond_exp.un_ex())
+
+        condition: tree.CJUMP = tree.CJUMP(tree.CJUMP.EQ, not_cond_exp, tree.CONST(1), done_lbl.label, body_label.label)
+                                           
+        test_lbl_condition: tree.SEQ = tree.SEQ(test_lbl, condition)
+        body_stm: tree.SEQ = tree.SEQ(body_label, tree.SEQ(stm.un_ex(), tree.SEQ(tree.JUMP(test_lbl.label), done_lbl)))
+
+        return translate.Exp(tree.ESEQ(tree.SEQ(test_lbl_condition, body_stm), tree.CONST(0)))
+        
 
     @abstractmethod
     def visit_print(self, element: Print) -> translate.Exp:
-        pass
+        exp: translate.Exp = element.print_exp.accept_ir(self)
+
+        list_exp = List[tree.Exp]
+        list_exp.append(exp.un_ex())
+
+        ex_call = self.current_frame.external_call("print", list_exp)
+
+        return translate.Exp(ex_call)
 
     def visit_assign(self, element: Assign) -> translate.Exp:
         var: translate.Exp = element.left_side_id.accept_ir(self)
@@ -1696,17 +1735,17 @@ class TranslateVisitor(IRVisitor):
 
     @abstractmethod
     def visit_and(self, element: And) -> translate.Exp:
-        leftOp: translate.Exp = element.left_side_exp.accept_ir(self)
-        rightOp: translate.Exp = element.right_side_exp.accept_ir(self)
+        left: translate.Exp = element.left_side_exp.accept_ir(self)
+        right: translate.Exp = element.right_side_exp.accept_ir(self)
 
-        return translate.Exp(tree.BINOP(tree.BINOP.AND, leftOp.un_ex(), rightOp.un_ex()))
+        return translate.Exp(tree.BINOP(tree.BINOP.AND, left.un_ex(), right.un_ex()))
 
     @abstractmethod
     def visit_less_than(self, element: LessThan) -> translate.Exp:
-        leftOp: translate.Exp = element.left_side_exp.accept_ir(self)
-        rightOp: translate.Exp = element.right_side_exp.accept_ir(self)
+        left: translate.Exp = element.left_side_exp.accept_ir(self)
+        right: translate.Exp = element.right_side_exp.accept_ir(self)
 
-        return translate.Exp(tree.BINOP(tree.BINOP.MINUS, rightOp.un_ex(), leftOp.un_ex()))
+        return translate.Exp(tree.BINOP(tree.BINOP.MINUS, right.un_ex(), left.un_ex()))
 
     @abstractmethod
     def visit_plus(self, element: Plus) -> translate.Exp:
