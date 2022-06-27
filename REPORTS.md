@@ -64,11 +64,10 @@
 
 1. Qual é o nome do relator?
 
-    > Escreva sua resposta aqui
-
+    > Carlos Eduardo
 2. A etapa foi completamente ou parcialmente concluída?
 
-    > Escreva sua resposta aqui
+    > Parcialmente concluída
 
 3. No caso de parcialmente concluída, o que não foi concluído?
 
@@ -76,20 +75,19 @@
 
 4. O programa passa nos testes automatizados?
     
-    > Escreva sua resposta aqui
+    > não houve testes
 
 5. Algum erro de execução foi encontrado para alguma das entradas? Quais?
     
-    > Escreva sua resposta aqui
+    > não houve testes
 
 6. Quais as dificuldades encontradas para realização da etapa do projeto?
     
-    > Escreva sua resposta aqui
+    > Escreva sua resposta aqui (Dificuldade em estruturar uma lógica para a funcionalidade do visit call
 
 7. Qual a participação de cada membro da equipe na etapa de execução?
     
-    > Escreva sua resposta aqui
-
+    > os membros não dividiram tarefas, utilizamos da programação com live em chamada para podermos tirarmos dúvidas e ajudarmos uns aos outros
 
 # 4º Relatóio: Etapa AI-d (Seleção de Instruções)
 
