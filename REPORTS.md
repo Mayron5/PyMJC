@@ -71,23 +71,23 @@
 
 3. No caso de parcialmente concluída, o que não foi concluído?
 
-    > Escreva sua resposta aqui
+    > O visit_int_array_type, visit_boolean_type, visit_integer_type, visit_identifier_type
 
 4. O programa passa nos testes automatizados?
     
-    > não houve testes
+    > Nos teste do github, sim.
 
 5. Algum erro de execução foi encontrado para alguma das entradas? Quais?
     
-    > não houve testes
+    > Não houve erro nos teste do github.
 
 6. Quais as dificuldades encontradas para realização da etapa do projeto?
     
-    > Escreva sua resposta aqui (Dificuldade em estruturar uma lógica para a funcionalidade do visit call
+    > Dificuldade em estruturar uma lógica para a funcionalidade do visit call, e de entender como funcionava a teoria do código
 
 7. Qual a participação de cada membro da equipe na etapa de execução?
     
-    > os membros não dividiram tarefas, utilizamos da programação com live em chamada para podermos tirarmos dúvidas e ajudarmos uns aos outros
+    > Os membros não dividiram tarefas, utilizamos da programação com live share em chamada para podermos tirarmos dúvidas e ajudarmos uns aos outros.
 
 # 4º Relatóio: Etapa AI-d (Seleção de Instruções)
 
