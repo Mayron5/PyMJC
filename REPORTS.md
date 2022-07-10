@@ -89,7 +89,7 @@
     
     > Os membros não dividiram tarefas, utilizamos da programação com live share em chamada para podermos tirarmos dúvidas e ajudarmos uns aos outros.
 
-# 4º Relatóio: Etapa AI-d (Seleção de Instruções)
+# 4º Relatório: Etapa AI-d (Seleção de Instruções)
 
 1. Qual é o nome do relator?
 
