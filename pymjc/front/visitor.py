@@ -1661,33 +1661,28 @@ class TranslateVisitor(IRVisitor):
         
         true_label: temp.Label = temp.Label()
         false_label: temp.Label = temp.Label()
-        end_if_label: temp.Label = temp.Label()
 
-        return translate.Nx(tree.SEQ(
-                                tree.SEQ(
-                                    tree.SEQ(
-                                        tree.SEQ(
-                                            tree.CJUMP(tree.CJUMP.EQ, exp.un_ex(), tree.CONST(1), true_label, false_label),
-                                            tree.SEQ(tree.LABEL(true_label), if_stm.un_nx())),
-                                        tree.JUMP(end_if_label)),
-                                    tree.SEQ(tree.LABEL(false_label), else_stm.un_nx())), 
-                                tree.LABEL(end_if_label)))
+        if_then_else_exp: translate.IfThenElseExp = translate.IfThenElseExp(exp, if_stm , else_stm)
+
+        translate.Nx(if_then_else_exp.un_cx(true_label, false_label))
   
 
     def visit_while(self, element: While) -> translate.Exp:
-        test: temp.Label = temp.Label()
-        true_label: temp.Label = temp.Label()
-        false_label: temp.Label = temp.Label()
+        test_lbl: temp.Label = temp.Label()
+        done_lbl: temp.Label = temp.Label()
+        
         exp: translate.Exp = element.condition_exp.accept_ir(self)
         body: translate.Exp = element.statement.accept_ir(self)
 
+        condicao: tree.BINOP = tree.BINOP(tree.BINOP.XOR, tree.CONST(0), exp.un_ex())
+        if_stm: tree.SEQ = tree.SEQ(body.un_ex(), tree.JUMP(test_lbl))
+        else_stm: tree.JUMP = tree.JUMP(done_lbl)
+
+        if_then_else_exp: translate.IfThenElseExp = translate.IfThenElseExp(condicao, if_stm, else_stm)
        
-        return translate.Nx(tree.SEQ(
-                                tree.SEQ(
-                                    tree.SEQ(tree.LABEL(test),
-                                             tree.CJUMP(tree.CJUMP.EQ, exp.un_ex(), tree.CONST(1),true_label,false_label)),
-                                    tree.SEQ(tree.LABEL(true_label),body.un_nx())), 
-                                tree.LABEL(false_label)))
+        while_stm: tree.SEQ = tree.SEQ(tree.LABEL(test_lbl), if_then_else_exp.un_ex(), tree.LABEL(done_lbl))
+
+        return translate.Nx(while_stm)
 
 
 
@@ -1731,6 +1726,8 @@ class TranslateVisitor(IRVisitor):
         args: tree.ExpList = tree.ExpList()
         true_label: temp.Label = temp.Label()
         false_label: temp.Label = temp.Label()
+
+        
 
         index_exp = tree.ESEQ(
                         tree.SEQ(
